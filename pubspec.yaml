@@ -1,0 +1,19 @@
+name: division
+description: Simple to use yet powerfull style widgets with syntax inspired by CSS.
+version: 0.8.8
+
+homepage: https://gitlab.com/sovann.dev/division
+repository: https://gitlab.com/sovann.dev/division
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# flutter:
