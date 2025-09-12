@@ -70,8 +70,6 @@ class DashedBorderPainter extends CustomPainter {
 }
 
 class CustomDashedBorder extends StatelessWidget {
-  final double width;
-  final double height;
   final double? strokeWidth;
   final double? dashLength;
   final double? gapLength;
@@ -82,8 +80,6 @@ class CustomDashedBorder extends StatelessWidget {
 
   const CustomDashedBorder({
     super.key,
-    this.width = 200,
-    this.height = 100,
     this.strokeWidth = 2,
     this.dashLength = 6,
     this.gapLength = 3,
