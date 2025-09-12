@@ -1,3 +1,4 @@
+import 'package:division/src/dash.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
@@ -149,6 +150,20 @@ abstract class CoreStyle {
       colors: colors,
       stops: stops,
       tileMode: tileMode,
+    );
+  }
+
+  void dashBorder({
+    Color? color,
+    double? strokeWidth,
+    double? dashLength,
+    double? gapLength,
+  }) {
+    _styleModel.dashBorder = DashBorder(
+      color: color,
+      strokeWidth: strokeWidth,
+      dashLength: dashLength,
+      gapLength: gapLength,
     );
   }
 

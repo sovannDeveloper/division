@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'dash.dart';
 import 'function/hex_color.dart';
 // import 'style.dart';
 
@@ -192,6 +193,7 @@ class StyleModel {
   EdgeInsetsGeometry? margin;
   Gradient? gradient;
   BoxBorder? border;
+  DashBorder? dashBorder;
   BorderRadiusGeometry? borderRadius;
   BoxShape? boxShape;
   List<BoxShadow>? boxShadow;
@@ -231,6 +233,7 @@ class StyleModel {
     margin = _replace(margin, intruder?.margin, override);
     gradient = _replace(gradient, intruder?.gradient, override);
     border = _replace(border, intruder?.border, override);
+    dashBorder = _replace(dashBorder, intruder?.dashBorder, override);
     borderRadius = _replace(borderRadius, intruder?.borderRadius, override);
     boxShape = _replace(boxShape, intruder?.boxShape, override);
     boxShadow = _replace(boxShadow, intruder?.boxShadow, override);

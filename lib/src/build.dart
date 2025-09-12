@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'dash.dart';
 import 'model.dart';
 
 class CoreBuild extends StatelessWidget {
@@ -34,6 +35,21 @@ class CoreBuild extends StatelessWidget {
         maxWidth: 0.0,
         maxHeight: 0.0,
         child: ConstrainedBox(constraints: const BoxConstraints.expand()),
+      );
+    }
+
+    // Dash border
+    if (styleModel?.dashBorder != null) {
+      final radius = decoration?.borderRadius?.resolve(TextDirection.ltr) ??
+          BorderRadius.zero;
+
+      widgetTree = CustomDashedBorder(
+        child: widgetTree,
+        radius: radius,
+        dashLength: styleModel?.dashBorder?.dashLength,
+        gapLength: styleModel?.dashBorder?.gapLength,
+        strokeWidth: styleModel?.dashBorder?.strokeWidth,
+        color: styleModel?.dashBorder?.color,
       );
     }
 

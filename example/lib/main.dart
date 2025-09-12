@@ -53,20 +53,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   ..height(100)
                   ..width(1000)
                   ..borderRadius(all: 12)
+                  ..alignmentContent.center()
                   ..background.color(Colors.orange)
                   ..border(
                     all: 5,
                     color: Colors.red,
                     style: BorderStyle.solid,
                   ),
+                child: Txt('Hello Container'),
               ),
               const SizedBox(height: 20),
               Parent(
                   style: ParentStyle()
                     ..height(100)
-                    ..width(100)
-                    ..borderRadius(all: 12)
-                    ..background.color(Colors.orange)),
+                    ..borderRadius(all: 120)
+                    ..dashBorder(
+                        color: Colors.red,
+                        dashLength: 5,
+                        gapLength: 10,
+                        strokeWidth: 4)
+                    ..dashBorder()
+                    ..background.color(Colors.white)),
             ],
           ),
         ),
