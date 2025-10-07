@@ -38,21 +38,6 @@ class CoreBuild extends StatelessWidget {
       );
     }
 
-    // Dash border
-    if (styleModel?.dashBorder != null) {
-      final radius = decoration?.borderRadius?.resolve(TextDirection.ltr) ??
-          BorderRadius.zero;
-
-      widgetTree = CustomDashedBorder(
-        child: widgetTree,
-        radius: radius,
-        dashLength: styleModel?.dashBorder?.dashLength,
-        gapLength: styleModel?.dashBorder?.gapLength,
-        strokeWidth: styleModel?.dashBorder?.strokeWidth,
-        color: styleModel?.dashBorder?.color,
-      );
-    }
-
     if (styleModel?.alignmentContent != null)
       widgetTree =
           Align(alignment: styleModel!.alignmentContent!, child: widgetTree);
@@ -97,6 +82,21 @@ class CoreBuild extends StatelessWidget {
           splashColor: styleModel?.ripple?.splashColor,
           child: widgetTree,
         ),
+      );
+    }
+
+    // Dash border
+    if (styleModel?.dashBorder != null) {
+      final radius = decoration?.borderRadius?.resolve(TextDirection.ltr) ??
+          BorderRadius.zero;
+
+      widgetTree = CustomDashedBorder(
+        child: widgetTree,
+        radius: radius,
+        dashLength: styleModel?.dashBorder?.dashLength,
+        gapLength: styleModel?.dashBorder?.gapLength,
+        strokeWidth: styleModel?.dashBorder?.strokeWidth,
+        color: styleModel?.dashBorder?.color,
       );
     }
 

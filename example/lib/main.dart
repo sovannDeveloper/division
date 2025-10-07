@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Txt('Division')),
+      appBar: AppBar(title: const Txt('OC Division')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -64,16 +64,20 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               const SizedBox(height: 20),
               Parent(
-                  style: ParentStyle()
-                    ..height(100)
-                    ..borderRadius(all: 120)
-                    ..dashBorder(
-                        color: Colors.red,
-                        dashLength: 5,
-                        gapLength: 10,
-                        strokeWidth: 4)
-                    ..dashBorder()
-                    ..background.color(Colors.white)),
+                gesture: Gestures()
+                  ..onTap(() {
+                    print('--=> ${DateTime.now()}');
+                  }),
+                style: ParentStyle()
+                  ..height(100)
+                  ..borderRadius(all: 10)
+                  ..padding(all: 20)
+                  ..dashBorder(strokeWidth: 1, color: Colors.orange)
+                  ..alignmentContent.center()
+                  ..ripple(true)
+                  ..background.color(Colors.white),
+                child: Txt('Hello Sovann'),
+              ),
             ],
           ),
         ),
