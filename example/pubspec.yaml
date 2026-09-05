@@ -21,10 +21,19 @@ dev_dependencies:
   flutter_lints: ^4.0.0
 
 flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
   fonts:
-    - family: kmFont
+    - family: Battambang
       fonts:
         - asset: assets/fonts/battambang_regular.ttf
         - asset: assets/fonts/battambang_bold.ttf
-
-  uses-material-design: true
+          weight: 700
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto_regular.ttf
+        - asset: assets/fonts/roboto_bold.ttf
+          weight: 700

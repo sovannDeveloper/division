@@ -64,8 +64,11 @@ correct behaviour that was silently wrong.
   both test suites.
 * Made the internal style/text merge helper generic instead of `dynamic`, which
   had been letting values of any type into any field.
-* Rewrote the example app to exercise decoration, borders, dashed borders,
-  animation, press feedback and editable text.
+* Replaced the example app with a gallery covering the whole API: ten pages
+  (showcase, layout, decoration, transform, overflow, text, editable text,
+  gestures, animation, composition), each demo showing its own source above the
+  rendered result. Its test suite opens every page and scrolls each to the end,
+  so a layout overflow anywhere fails the build.
 
 ## 0.8.8
 * Added `autoFocus` parameter to the `editable` method in `TxtStyle`
