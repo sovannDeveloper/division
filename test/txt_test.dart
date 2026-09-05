@@ -101,6 +101,168 @@ void main() {
     });
   });
 
+  group('Txt stroke', () {
+    Text strokePass(WidgetTester tester) =>
+        tester.widgetList<Text>(find.byType(Text)).first;
+    Text fillPass(WidgetTester tester) =>
+        tester.widgetList<Text>(find.byType(Text)).last;
+
+    testWidgets('no stroke renders a single Text', (tester) async {
+      await tester.pumpWidget(host(Txt('hello', style: TxtStyle()..bold())));
+
+      expect(find.byType(Text), findsOneWidget);
+      expect(
+          find.descendant(of: find.byType(Txt), matching: find.byType(Stack)),
+          findsNothing);
+    });
+
+    testWidgets('a stroke paints an outline pass behind the fill',
+        (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..fontSize(30)
+          ..textColor(Colors.white)
+          ..textStroke(3, color: Colors.black),
+      )));
+
+      expect(find.byType(Text), findsNWidgets(2));
+
+      final Paint outline = strokePass(tester).style!.foreground!;
+      expect(outline.style, PaintingStyle.stroke);
+      expect(outline.strokeWidth, 3);
+      // Paint.color round-trips through a 32-bit ARGB encoding, so compare
+      // the encoded value rather than the reconstructed floats.
+      expect(outline.color.toARGB32(), Colors.black.toARGB32());
+
+      // color and foreground are mutually exclusive on a TextStyle.
+      expect(strokePass(tester).style!.color, isNull);
+      expect(fillPass(tester).style!.color, Colors.white);
+      expect(fillPass(tester).style!.foreground, isNull);
+    });
+
+    testWidgets('both passes lay out identically', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..fontSize(24)
+          ..maxLines(2)
+          ..textOverflow(TextOverflow.ellipsis)
+          ..textAlign.center()
+          ..textStroke(2),
+      )));
+
+      for (final Text pass in <Text>[strokePass(tester), fillPass(tester)]) {
+        expect(pass.data, 'hello');
+        expect(pass.maxLines, 2);
+        expect(pass.overflow, TextOverflow.ellipsis);
+        expect(pass.textAlign, TextAlign.center);
+        expect(pass.style!.fontSize, 24);
+      }
+
+      expect(tester.getSize(find.byType(Text).first),
+          tester.getSize(find.byType(Text).last));
+    });
+
+    testWidgets('the shadow is not painted twice', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..textShadow(color: Colors.red, blur: 3)
+          ..textStroke(2),
+      )));
+
+      expect(strokePass(tester).style!.shadows, isEmpty);
+      expect(fillPass(tester).style!.shadows, hasLength(1));
+    });
+
+    testWidgets('strokeJoin defaults to round and is configurable',
+        (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()..textStroke(2),
+      )));
+      expect(
+          strokePass(tester).style!.foreground!.strokeJoin, StrokeJoin.round);
+
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()..textStroke(2, join: StrokeJoin.miter),
+      )));
+      expect(
+          strokePass(tester).style!.foreground!.strokeJoin, StrokeJoin.miter);
+    });
+
+    testWidgets('a transparent fill leaves hollow text', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..textStroke(2, color: const Color(0xFF3F51B5))
+          ..textColor(Colors.transparent),
+      )));
+
+      expect(fillPass(tester).style!.color, Colors.transparent);
+      expect(
+          strokePass(tester).style!.foreground!.color.toARGB32(), 0xFF3F51B5);
+    });
+
+    testWidgets('a zero width stroke is ignored', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()..textStroke(0),
+      )));
+
+      expect(find.byType(Text), findsOneWidget);
+    });
+
+    testWidgets('clone and add carry the stroke', (tester) async {
+      final TxtStyle source = TxtStyle()
+        ..textStroke(4, color: const Color(0xFF4CAF50), join: StrokeJoin.bevel);
+
+      expect(source.clone().exportTextStyle.strokeWidth, 4);
+      expect(
+          source.clone().exportTextStyle.strokeColor, const Color(0xFF4CAF50));
+      expect(source.clone().exportTextStyle.strokeJoin, StrokeJoin.bevel);
+
+      final TxtStyle target = TxtStyle()..add(source);
+      expect(target.exportTextStyle.strokeWidth, 4);
+    });
+
+    testWidgets('the stroke animates', (tester) async {
+      Widget build(double width) => host(Txt(
+            'hello',
+            style: TxtStyle()
+              ..fontSize(24)
+              ..textStroke(width, color: Colors.black)
+              ..animate(200),
+          ));
+
+      await tester.pumpWidget(build(2));
+      expect(strokePass(tester).style!.foreground!.strokeWidth, 2);
+
+      await tester.pumpWidget(build(10));
+      await tester.pump(const Duration(milliseconds: 100));
+      final double mid = strokePass(tester).style!.foreground!.strokeWidth;
+      expect(mid, greaterThan(2));
+      expect(mid, lessThan(10));
+
+      await tester.pumpAndSettle();
+      expect(strokePass(tester).style!.foreground!.strokeWidth, 10);
+    });
+
+    testWidgets('an editable field is unaffected', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..textStroke(3)
+          ..editable(),
+      )));
+
+      expect(find.byType(EditableText), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('Txt editable', () {
     testWidgets('shows the given text, not the placeholder', (tester) async {
       await tester.pumpWidget(host(Txt(

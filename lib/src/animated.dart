@@ -129,6 +129,8 @@ class _TxtAnimatedState extends AnimatedWidgetBaseState<TxtAnimated> {
   Tween<int>? _maxLines;
   Tween<double>? _letterSpacing;
   Tween<double>? _wordSpacing;
+  Tween<double>? _strokeWidth;
+  ColorTween? _strokeColor;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
@@ -145,6 +147,11 @@ class _TxtAnimatedState extends AnimatedWidgetBaseState<TxtAnimated> {
     _wordSpacing = visitor(_wordSpacing, widget.textModel?.wordSpacing,
             (dynamic value) => Tween<double>(begin: value as double?))
         as Tween<double>?;
+    _strokeWidth = visitor(_strokeWidth, widget.textModel?.strokeWidth,
+            (dynamic value) => Tween<double>(begin: value as double?))
+        as Tween<double>?;
+    _strokeColor = visitor(_strokeColor, widget.textModel?.strokeColor,
+        (dynamic value) => ColorTween(begin: value as Color?)) as ColorTween?;
   }
 
   @override
@@ -156,7 +163,9 @@ class _TxtAnimatedState extends AnimatedWidgetBaseState<TxtAnimated> {
       ..textColor = _textColor?.evaluate(animation)
       ..maxLines = _maxLines?.evaluate(animation)
       ..letterSpacing = _letterSpacing?.evaluate(animation)
-      ..wordSpacing = _wordSpacing?.evaluate(animation);
+      ..wordSpacing = _wordSpacing?.evaluate(animation)
+      ..strokeWidth = _strokeWidth?.evaluate(animation)
+      ..strokeColor = _strokeColor?.evaluate(animation);
 
     if (textModel.editable == true) {
       return TxtBuildEditable(text: widget.text, textModel: textModel);

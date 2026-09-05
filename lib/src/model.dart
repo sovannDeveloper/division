@@ -401,6 +401,11 @@ class TextModel {
   List<Shadow>? textShadow;
   TextOverflow? textOverflow;
 
+  //stroke
+  double? strokeWidth;
+  Color? strokeColor;
+  StrokeJoin? strokeJoin;
+
   //editable
   bool? editable;
   TextInputType? keyboardType;
@@ -431,6 +436,10 @@ class TextModel {
     textDirection = _replace(textDirection, textModel?.textDirection, override);
     textShadow = _replace(textShadow, textModel?.textShadow, override);
 
+    strokeWidth = _replace(strokeWidth, textModel?.strokeWidth, override);
+    strokeColor = _replace(strokeColor, textModel?.strokeColor, override);
+    strokeJoin = _replace(strokeJoin, textModel?.strokeJoin, override);
+
     editable = _replace(editable, textModel?.editable, override);
     keyboardType = _replace(keyboardType, textModel?.keyboardType, override);
     placeholder = _replace(placeholder, textModel?.placeholder, override);
@@ -452,6 +461,9 @@ class TextModel {
   /// A detached copy of this model. See [StyleModel.copy].
   TextModel copy() => TextModel()..inject(this, true);
 
+  /// Whether an outline should be painted behind the glyphs.
+  bool get hasTextStroke => (strokeWidth ?? 0) > 0;
+
   TextStyle get textStyle {
     return TextStyle(
       fontWeight: fontWeight,
@@ -466,6 +478,23 @@ class TextModel {
       shadows: textShadow,
     );
   }
+
+  /// [textStyle] repainted as an outline.
+  ///
+  /// A [TextStyle] paints either a fill or a stroke, never both, so an outline
+  /// around filled text is drawn as a second pass behind [textStyle]. Passing
+  /// `foreground` makes `copyWith` drop `color`, which the two are not allowed
+  /// to share.
+  ///
+  /// The drop shadow stays on the fill pass only, so it is not doubled up.
+  TextStyle get strokeTextStyle => textStyle.copyWith(
+        shadows: const <Shadow>[],
+        foreground: Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth ?? 0.0
+          ..strokeJoin = strokeJoin ?? StrokeJoin.round
+          ..color = strokeColor ?? const Color(0xFF000000),
+      );
 }
 
 class TextAlignModel with ChangeNotifier {

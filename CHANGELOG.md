@@ -3,6 +3,13 @@
 Stability release. No API was removed; the changes below either fix a crash or
 correct behaviour that was silently wrong.
 
+### Added
+
+* `TxtStyle.textStroke(width, {color, join})` outlines the glyphs. The outline
+  is painted behind the fill, so `textColor` still shows through; a transparent
+  fill gives hollow text. It tweens with `animate`, travels through
+  `add`/`clone`, and does not apply to `editable` fields.
+
 ### Fixed — crashes
 
 * `background.blur()` no longer throws `type 'Null' is not a subtype of type

@@ -163,6 +163,86 @@ class TextDemo extends StatelessWidget {
           ),
         ),
         Demo(
+          title: 'textStroke',
+          note: 'The outline is painted behind the fill, so `textColor` still '
+              'shows through.',
+          code: '..fontSize(34)\n'
+              '..bold()\n'
+              '..textColor(Colors.white)\n'
+              '..textStroke(3, color: Colors.black)',
+          child: Txt(
+            'Outlined',
+            style: TxtStyle()
+              ..fontSize(34)
+              ..bold()
+              ..textColor(Colors.white)
+              ..textStroke(3, color: Colors.black),
+          ),
+        ),
+        Demo(
+          title: 'textStroke — hollow',
+          note: 'A transparent fill leaves just the outline.',
+          code: '..textStroke(2, color: Colors.indigo)\n'
+              '..textColor(Colors.transparent)',
+          child: Txt(
+            'Hollow',
+            style: TxtStyle()
+              ..fontSize(34)
+              ..bold()
+              ..textStroke(2, color: Colors.indigo)
+              ..textColor(Colors.transparent),
+          ),
+        ),
+        Demo(
+          title: 'textStroke — join',
+          note: 'Round by default; miter keeps sharp corners sharp.',
+          code: '..textStroke(5, join: StrokeJoin.round)\n'
+              '..textStroke(5, join: StrokeJoin.miter)',
+          child: Wrap(
+            spacing: 20,
+            runSpacing: 12,
+            children: <Widget>[
+              for (final MapEntry<String, StrokeJoin> entry
+                  in <String, StrokeJoin>{
+                'round': StrokeJoin.round,
+                'miter': StrokeJoin.miter,
+                'bevel': StrokeJoin.bevel,
+              }.entries)
+                Labelled(
+                  label: entry.key,
+                  child: Txt(
+                    'Ax',
+                    style: TxtStyle()
+                      ..fontSize(40)
+                      ..bold()
+                      ..textColor(Colors.white)
+                      ..textStroke(5, color: hex('#e91e63'), join: entry.value),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Demo(
+          title: 'textStroke with a shadow',
+          note: 'The shadow is applied to the fill pass only, so it is not '
+              'doubled up by the outline.',
+          code: '..textStroke(3, color: Colors.black)\n'
+              '..textShadow(color: Colors.black45, blur: 6, offset: Offset(0, 3))',
+          child: Txt(
+            'Poster',
+            style: TxtStyle()
+              ..fontSize(34)
+              ..bold()
+              ..textColor(hex('#f9d423'))
+              ..textStroke(3, color: Colors.black)
+              ..textShadow(
+                color: Colors.black45,
+                blur: 6,
+                offset: const Offset(0, 3),
+              ),
+          ),
+        ),
+        Demo(
           title: 'textElevation',
           note: 'Like `elevation`, but for the glyphs.',
           code: '..textElevation(6, color: Colors.indigo)',

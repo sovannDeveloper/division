@@ -523,6 +523,33 @@ Adds a directional text shadow simulating elevation. Like `elevation`, an
 ..textElevation(4.0, color: Colors.grey)
 ```
 
+#### `textStroke(double width, {Color color = Color(0xFF000000), StrokeJoin join = StrokeJoin.round})`
+Outlines the glyphs. The outline is painted behind the fill, so `textColor`
+still shows through.
+```dart
+..fontSize(40)
+..bold()
+..textColor(Colors.white)
+..textStroke(3, color: Colors.black)
+```
+
+For hollow text, make the fill transparent:
+```dart
+..textStroke(2, color: Colors.indigo)
+..textColor(Colors.transparent)
+```
+
+A `TextStyle` paints either a fill or a stroke, never both, so a stroked `Txt`
+renders the text twice — the outline underneath, the fill on top. Two notes
+follow from that:
+
+* Half the stroke falls outside the glyph, so a wide stroke can be clipped by a
+  tight parent. Leave a little `padding` for it.
+* `textShadow`/`textElevation` are applied to the fill pass only, so the shadow
+  is not doubled.
+
+`textStroke` has no effect on an `editable` field, which paints its own text.
+
 #### `textAlign`
 Aligns the text within its container. Methods, so parentheses are required:
 ```dart

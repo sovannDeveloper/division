@@ -404,6 +404,33 @@ class TxtStyle extends CoreStyle {
     ];
   }
 
+  /// Outlines the glyphs.
+  ///
+  /// ```dart
+  /// ..textStroke(3, color: Colors.black)
+  /// ```
+  ///
+  /// The outline is painted behind the fill, so [textColor] still shows
+  /// through. For hollow text, make the fill transparent:
+  ///
+  /// ```dart
+  /// ..textStroke(2, color: Colors.indigo)
+  /// ..textColor(Colors.transparent)
+  /// ```
+  ///
+  /// Half the stroke falls outside the glyph, so a wide stroke may be clipped
+  /// by a tight parent — leave a little `padding` for it.
+  ///
+  /// Has no effect on an `editable` field, which paints its own text.
+  void textStroke(double width,
+      {Color color = const Color(0xFF000000),
+      StrokeJoin join = StrokeJoin.round}) {
+    _textModel
+      ..strokeWidth = width
+      ..strokeColor = color
+      ..strokeJoin = join;
+  }
+
   /// Elevates the text with a shadow.
   /// [angle] format depends on what is specified in the style widget`s constructor.
   /// ```dart

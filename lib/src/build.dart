@@ -217,15 +217,32 @@ class TxtBuild extends StatelessWidget {
   final String text;
   final TextModel? textModel;
 
-  @override
-  Widget build(BuildContext context) => Text(
+  /// The same text laid out identically, differing only in how it is painted.
+  Text _pass(TextStyle? style) => Text(
         text,
-        style: textModel?.textStyle,
+        style: style,
         textAlign: textModel?.textAlign ?? TextAlign.start,
         maxLines: textModel?.maxLines,
         textDirection: textModel?.textDirection,
         overflow: textModel?.textOverflow,
       );
+
+  @override
+  Widget build(BuildContext context) {
+    final Text fill = _pass(textModel?.textStyle);
+
+    if (textModel?.hasTextStroke != true) return fill;
+
+    // A TextStyle paints a fill or a stroke, never both, so the outline is a
+    // second pass underneath. Both passes get identical constraints and
+    // metrics, so the stack is exactly the size of one of them.
+    return Stack(
+      children: <Widget>[
+        _pass(textModel!.strokeTextStyle),
+        fill,
+      ],
+    );
+  }
 }
 
 class TxtBuildEditable extends StatefulWidget {
