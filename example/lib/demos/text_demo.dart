@@ -256,6 +256,46 @@ class TextDemo extends StatelessWidget {
           ),
         ),
         Demo(
+          title: 'selectable',
+          note: 'Long press (or drag with a mouse) to highlight and copy.',
+          code: 'TxtStyle()..selectable()',
+          child: Parent(
+            style: ParentStyle()..width(240),
+            child: Txt(
+              'Long press this paragraph to select it, then copy it with the '
+              'toolbar that appears.',
+              style: TxtStyle()
+                ..selectable()
+                ..fontSize(13),
+            ),
+          ),
+        ),
+        Demo(
+          title: 'selectable across several widgets',
+          note: 'Each selectable Txt is its own region. To drag a selection '
+              'across a group, wrap them in one SelectionArea and leave '
+              '`selectable` off.',
+          code: 'SelectionArea(\n'
+              '  child: Column(\n'
+              '    children: [\n'
+              "      Txt('First line'),\n"
+              "      Txt('Second line'),\n"
+              '    ],\n'
+              '  ),\n'
+              ')',
+          child: SelectionArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Txt('First line — drag from here',
+                    style: TxtStyle()..fontSize(13)),
+                Txt('Second line — all the way to here',
+                    style: TxtStyle()..fontSize(13)),
+              ],
+            ),
+          ),
+        ),
+        Demo(
           title: 'Container styling on Txt',
           note: 'A `TxtStyle` also accepts every `ParentStyle` method.',
           code: 'TxtStyle()\n'

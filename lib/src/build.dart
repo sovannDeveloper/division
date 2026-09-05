@@ -231,17 +231,30 @@ class TxtBuild extends StatelessWidget {
   Widget build(BuildContext context) {
     final Text fill = _pass(textModel?.textStyle);
 
-    if (textModel?.hasTextStroke != true) return fill;
+    Widget widgetTree = fill;
 
-    // A TextStyle paints a fill or a stroke, never both, so the outline is a
-    // second pass underneath. Both passes get identical constraints and
-    // metrics, so the stack is exactly the size of one of them.
-    return Stack(
-      children: <Widget>[
-        _pass(textModel!.strokeTextStyle),
-        fill,
-      ],
-    );
+    if (textModel?.hasTextStroke == true) {
+      // A TextStyle paints a fill or a stroke, never both, so the outline is a
+      // second pass underneath. Both passes get identical constraints and
+      // metrics, so the stack is exactly the size of one of them.
+      //
+      // The outline repeats the same string purely to paint it, so it is kept
+      // out of selection — otherwise highlighting the text would copy it twice.
+      // This holds for a `SelectionArea` anywhere above us, not just the one
+      // `selectable` adds.
+      widgetTree = Stack(
+        children: <Widget>[
+          SelectionContainer.disabled(child: _pass(textModel!.strokeTextStyle)),
+          fill,
+        ],
+      );
+    }
+
+    if (textModel?.selectable == true) {
+      widgetTree = SelectionArea(child: widgetTree);
+    }
+
+    return widgetTree;
   }
 }
 

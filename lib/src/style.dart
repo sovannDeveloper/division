@@ -404,6 +404,24 @@ class TxtStyle extends CoreStyle {
     ];
   }
 
+  /// Lets the text be highlighted and copied.
+  ///
+  /// ```dart
+  /// ..selectable()
+  /// ```
+  ///
+  /// Each selectable [Txt] is its own selection region, so a drag cannot span
+  /// two of them. To select across several widgets at once, wrap them in a
+  /// single `SelectionArea` yourself and leave this off.
+  ///
+  /// Selection installs its own long-press and drag recognizers, which compete
+  /// with any [Gestures] on the same widget.
+  ///
+  /// Redundant on an `editable` field, which already handles its own selection.
+  void selectable([bool enable = true]) {
+    if (enable == true) _textModel.selectable = true;
+  }
+
   /// Outlines the glyphs.
   ///
   /// ```dart

@@ -1,5 +1,6 @@
 import 'package:division/division.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers.dart';
@@ -98,6 +99,167 @@ void main() {
 
       await tester.tap(find.text('hello'));
       expect(taps, 1);
+    });
+  });
+
+  group('Txt selectable', () {
+    testWidgets('plain text is not selectable', (tester) async {
+      await tester.pumpWidget(host(const Txt('hello')));
+
+      expect(find.byType(SelectionArea), findsNothing);
+      expect(find.byType(SelectableRegion), findsNothing);
+    });
+
+    testWidgets('selectable wraps the text in a selection region',
+        (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()..selectable(),
+      )));
+
+      expect(find.byType(SelectionArea), findsOneWidget);
+      expect(find.text('hello'), findsOneWidget);
+    });
+
+    testWidgets('selectable(false) leaves the text plain', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()..selectable(false),
+      )));
+
+      expect(find.byType(SelectionArea), findsNothing);
+    });
+
+    testWidgets('the text can actually be selected and copied', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello world',
+        style: TxtStyle()
+          ..fontSize(20)
+          ..selectable(),
+      )));
+
+      await tester.longPress(find.text('hello world'));
+      await tester.pumpAndSettle();
+
+      // The selection toolbar only appears once a selection exists.
+      expect(find.text('Copy'), findsOneWidget);
+    });
+
+    testWidgets('styling still applies to selectable text', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..selectable()
+          ..bold()
+          ..fontSize(21)
+          ..textColor(Colors.red)
+          ..maxLines(2)
+          ..textOverflow(TextOverflow.ellipsis)
+          ..textAlign.center(),
+      )));
+
+      final Text text = tester.widget<Text>(find.byType(Text));
+      expect(text.style!.fontWeight, FontWeight.bold);
+      expect(text.style!.fontSize, 21);
+      expect(text.style!.color, Colors.red);
+      expect(text.maxLines, 2);
+      expect(text.overflow, TextOverflow.ellipsis);
+      expect(text.textAlign, TextAlign.center);
+    });
+
+    testWidgets('container styling still applies', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..selectable()
+          ..padding(all: 8)
+          ..background.color(Colors.blue),
+      )));
+
+      expect(decorationOf(tester).color, Colors.blue);
+    });
+
+    testWidgets('clone and add carry selectable', (tester) async {
+      final TxtStyle source = TxtStyle()..selectable();
+
+      expect(source.clone().exportTextStyle.selectable, isTrue);
+      expect((TxtStyle()..add(source)).exportTextStyle.selectable, isTrue);
+    });
+
+    testWidgets('an editable field is left to handle its own selection',
+        (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..selectable()
+          ..editable(),
+      )));
+
+      expect(find.byType(EditableText), findsOneWidget);
+      expect(find.byType(SelectionArea), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    /// The outline pass sits under a `SelectionContainer.disabled`, which is
+    /// the only `SelectionContainer` with a null delegate.
+    Finder disabledAncestorOf(Finder finder) => find.ancestor(
+          of: finder,
+          matching: find.byWidgetPredicate(
+              (Widget w) => w is SelectionContainer && w.delegate == null),
+        );
+
+    testWidgets('a stroked selectable excludes the outline pass',
+        (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..fontSize(20)
+          ..selectable()
+          ..textStroke(2),
+      )));
+
+      expect(find.byType(Text), findsNWidgets(2));
+      // The outline is excluded; the fill it sits behind is not.
+      expect(disabledAncestorOf(find.byType(Text).first), findsOneWidget);
+      expect(disabledAncestorOf(find.byType(Text).last), findsNothing);
+    });
+
+    testWidgets('a stroked text is selected once, not twice', (tester) async {
+      // No `selectable()` here — the guard has to hold for a SelectionArea the
+      // caller put up themselves.
+      SelectedContent? selected;
+      await tester.pumpWidget(host(SelectionArea(
+        onSelectionChanged: (SelectedContent? content) => selected = content,
+        child: Txt(
+          'hello',
+          style: TxtStyle()
+            ..fontSize(20)
+            ..textStroke(2),
+        ),
+      )));
+
+      await tester.longPress(find.byType(Text).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Select all'));
+      await tester.pumpAndSettle();
+
+      // Select-all visits every registered selectable in the region. Without
+      // the guard the outline pass registers too and this reads "hellohello".
+      expect(selected?.plainText, 'hello');
+    });
+
+    testWidgets('animates alongside selection', (tester) async {
+      await tester.pumpWidget(host(Txt(
+        'hello',
+        style: TxtStyle()
+          ..fontSize(12)
+          ..selectable()
+          ..animate(200),
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SelectionArea), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

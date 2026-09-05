@@ -401,6 +401,9 @@ class TextModel {
   List<Shadow>? textShadow;
   TextOverflow? textOverflow;
 
+  //selection
+  bool? selectable;
+
   //stroke
   double? strokeWidth;
   Color? strokeColor;
@@ -435,6 +438,8 @@ class TextModel {
         _replace(textDecoration, textModel?.textDecoration, override);
     textDirection = _replace(textDirection, textModel?.textDirection, override);
     textShadow = _replace(textShadow, textModel?.textShadow, override);
+
+    selectable = _replace(selectable, textModel?.selectable, override);
 
     strokeWidth = _replace(strokeWidth, textModel?.strokeWidth, override);
     strokeColor = _replace(strokeColor, textModel?.strokeColor, override);

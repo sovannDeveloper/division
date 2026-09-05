@@ -5,6 +5,10 @@ correct behaviour that was silently wrong.
 
 ### Added
 
+* `TxtStyle.selectable()` lets the text be highlighted and copied. A stroked
+  `Txt` paints its string twice, so the outline pass is kept out of selection —
+  otherwise a select-all would copy the text twice. That guard applies to any
+  `SelectionArea` above the widget, not only the one `selectable` adds.
 * `TxtStyle.textStroke(width, {color, join})` outlines the glyphs. The outline
   is painted behind the fill, so `textColor` still shows through; a transparent
   fill gives hollow text. It tweens with `animate`, travels through

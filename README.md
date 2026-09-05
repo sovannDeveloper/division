@@ -523,6 +523,24 @@ Adds a directional text shadow simulating elevation. Like `elevation`, an
 ..textElevation(4.0, color: Colors.grey)
 ```
 
+#### `selectable([bool enable = true])`
+Lets the text be highlighted and copied.
+```dart
+Txt(
+  'Long press or drag to select me.',
+  style: TxtStyle()..selectable(),
+)
+```
+
+Each selectable `Txt` is its own selection region, so a drag cannot span two of
+them. To select across several widgets at once, wrap them in a single
+`SelectionArea` yourself and leave `selectable` off — a plain `Txt` inside a
+`SelectionArea` is already selectable.
+
+Selection installs its own long-press and drag recognizers, which compete with
+any `Gestures` attached to the same widget. It is redundant on an `editable`
+field, which already handles its own selection.
+
 #### `textStroke(double width, {Color color = Color(0xFF000000), StrokeJoin join = StrokeJoin.round})`
 Outlines the glyphs. The outline is painted behind the fill, so `textColor`
 still shows through.
