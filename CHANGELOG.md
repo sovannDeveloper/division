@@ -1,3 +1,72 @@
+## 0.9.0
+
+Stability release. No API was removed; the changes below either fix a crash or
+correct behaviour that was silently wrong.
+
+### Fixed — crashes
+
+* `background.blur()` no longer throws `type 'Null' is not a subtype of type
+  'BorderRadius'` when no `borderRadius` is set.
+* `overflow.hidden()` no longer throws when `borderRadius` is a
+  `BorderRadiusDirectional`; border radii are now resolved against the ambient
+  `Directionality`.
+* Attaching a `Gestures` to a `Parent` that has no child but tight constraints
+  no longer throws a null check error.
+* A `duration` without a `curve` no longer throws; the curve defaults to
+  `Curves.linear`.
+* `overflow.scrollable()` no longer throws when no direction was recorded.
+* `dashBorder()` with a zero `dashLength`/`gapLength` no longer hangs the raster
+  thread in an infinite loop.
+* `TextModel.obscureText` is no longer a `late` field that could throw
+  `LateInitializationError`.
+
+### Fixed — behaviour
+
+* Animations no longer write their interpolated values back into the
+  `ParentStyle`/`TxtStyle` you own. Animating a style used to permanently pin
+  its cached decoration, constraints and transform, corrupting every other
+  widget sharing that instance.
+* Gestures now default to `HitTestBehavior.opaque`, so the whole styled box —
+  padding and empty areas included — is interactive. Previously the detector
+  deferred to a child that often did not hit test, and taps were silently
+  dropped. Pass `behavior:` to `Gestures()` to opt out.
+* `editable` no longer shows the placeholder in place of the widget's text. The
+  placeholder is drawn over the field instead of being swapped into the
+  controller, so the real value is never displaced.
+* A `FocusNode` passed to `editable()` is no longer disposed by the widget; only
+  an internally created node is. Focus listeners are removed on dispose.
+* `TextEditingController`s are now created in the `State` and disposed. They
+  were previously allocated in the widget constructor on every rebuild and
+  never disposed.
+* An animated `editable` field keeps its platform input connection across
+  animation frames instead of losing focus and typed text.
+* `TxtStyle.clone()`/`add()` now carry `placeholder` and `obscureText`.
+* `editable()` no longer clears a `maxLines` set earlier in the same cascade.
+* `background.blendMode()` now notifies its listeners, so the blend mode
+  actually reaches the decoration.
+* `hex()` returns a plain `Color` instead of a `Color` subclass. A subclass can
+  never compare equal to a `Color`, which broke decoration diffing and
+  animation.
+* `hex()` accepts 3, 4, 6 and 8 digit forms and throws a descriptive
+  `FormatException` on malformed input.
+* `background.image()` throws an `ArgumentError` rather than a bare `String`,
+  and takes a soundly typed `ImageProvider<Object>`.
+* `alignment.getAlignment` returns `null` before an alignment is set instead of
+  throwing.
+* Replaced deprecated `Matrix4.scale`/`translate` and `Color.withOpacity` calls.
+
+### Project
+
+* Added a test suite: 78 widget/unit tests for the package plus 3 for the
+  example.
+* Added `analysis_options.yaml` (`flutter_lints`, `strict-casts`,
+  `strict-raw-types`) and a GitHub Actions workflow running format, analyze and
+  both test suites.
+* Made the internal style/text merge helper generic instead of `dynamic`, which
+  had been letting values of any type into any field.
+* Rewrote the example app to exercise decoration, borders, dashed borders,
+  animation, press feedback and editable text.
+
 ## 0.8.8
 * Added `autoFocus` parameter to the `editable` method in `TxtStyle`
 * Added `textOverflow` method to `TxtStyle`

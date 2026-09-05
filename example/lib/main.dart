@@ -1,13 +1,7 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:division/division.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -15,73 +9,137 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      home: MyHomePage(title: 'OC Util'),
+      title: 'Division demo',
+      theme: ThemeData(useMaterial3: true),
+      home: const DemoPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class DemoPage extends StatefulWidget {
+  const DemoPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<DemoPage> createState() => _DemoPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _DemoPageState extends State<DemoPage> {
+  bool _expanded = false;
+  bool _pressed = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Txt('OC Division')),
+      appBar: AppBar(title: const Txt('Division')),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Parent(
-                style: ParentStyle()
-                  ..height(100)
-                  ..width(1000)
-                  ..borderRadius(all: 12)
-                  ..background.color(Colors.blue),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            _section('Decoration'),
+            Parent(
+              style: ParentStyle()
+                ..height(100)
+                ..borderRadius(all: 12)
+                ..alignmentContent.center()
+                ..linearGradient(
+                    colors: <Color>[hex('#3a7bd5'), hex('#00d2ff')])
+                ..elevation(10),
+              child: Txt(
+                'Gradient + elevation',
+                style: TxtStyle()
+                  ..textColor(Colors.white)
+                  ..bold()
+                  ..fontSize(18),
               ),
-              const SizedBox(height: 20),
-              Parent(
-                style: ParentStyle()
-                  ..height(100)
-                  ..width(1000)
-                  ..borderRadius(all: 12)
-                  ..alignmentContent.center()
-                  ..background.color(Colors.orange)
-                  ..border(
-                    all: 5,
-                    color: Colors.red,
-                    style: BorderStyle.solid,
-                  ),
-                child: Txt('Hello Container'),
+            ),
+            const SizedBox(height: 20),
+            _section('Border'),
+            Parent(
+              style: ParentStyle()
+                ..height(100)
+                ..borderRadius(all: 12)
+                ..alignmentContent.center()
+                ..background.color(Colors.orange.shade50)
+                ..border(all: 4, color: Colors.orange),
+              child: const Txt('Solid border'),
+            ),
+            const SizedBox(height: 20),
+            _section('Dashed border'),
+            Parent(
+              style: ParentStyle()
+                ..height(100)
+                ..borderRadius(all: 12)
+                ..padding(all: 20)
+                ..alignmentContent.center()
+                ..dashBorder(strokeWidth: 1.5, color: Colors.orange)
+                ..ripple(true)
+                ..background.color(Colors.white),
+              gesture: Gestures()
+                ..onTap(() => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tapped')),
+                    )),
+              child: const Txt('Tap me'),
+            ),
+            const SizedBox(height: 20),
+            _section('Animation'),
+            Parent(
+              style: ParentStyle()
+                ..height(_expanded ? 160 : 80)
+                ..borderRadius(all: _expanded ? 40 : 12)
+                ..alignmentContent.center()
+                ..background.color(_expanded ? Colors.indigo : Colors.teal)
+                ..animate(400, Curves.easeOut),
+              gesture: Gestures()
+                ..onTap(() => setState(() => _expanded = !_expanded)),
+              child: Txt(
+                _expanded ? 'Tap to collapse' : 'Tap to expand',
+                style: TxtStyle()..textColor(Colors.white),
               ),
-              const SizedBox(height: 20),
-              Parent(
-                gesture: Gestures()
-                  ..onTap(() {
-                    print('--=> ${DateTime.now()}');
-                  }),
-                style: ParentStyle()
-                  ..height(100)
-                  ..borderRadius(all: 10)
-                  ..padding(all: 20)
-                  ..dashBorder(strokeWidth: 1, color: Colors.orange)
-                  ..alignmentContent.center()
-                  ..ripple(true)
-                  ..background.color(Colors.white),
-                child: Txt('Hello Sovann'),
+            ),
+            const SizedBox(height: 20),
+            _section('Press feedback'),
+            Parent(
+              style: ParentStyle()
+                ..height(80)
+                ..borderRadius(all: 12)
+                ..alignmentContent.center()
+                ..background.color(Colors.purple)
+                ..scale(_pressed ? 0.95 : 1.0)
+                ..animate(150, Curves.easeOut),
+              gesture: Gestures()
+                ..isTap(
+                    (bool isPressed) => setState(() => _pressed = isPressed)),
+              child: Txt(
+                'Hold me',
+                style: TxtStyle()..textColor(Colors.white),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            _section('Editable text'),
+            Txt(
+              '',
+              style: TxtStyle()
+                ..padding(all: 16)
+                ..borderRadius(all: 12)
+                ..background.color(Colors.grey.shade200)
+                ..editable(placeholder: 'Type something…'),
+            ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
   }
+
+  Widget _section(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Txt(
+          title,
+          style: TxtStyle()
+            ..bold()
+            ..fontSize(13)
+            ..textColor(Colors.black54),
+        ),
+      );
 }

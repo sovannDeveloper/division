@@ -1,10 +1,11 @@
-import 'package:division/src/dash.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+
+import 'dash.dart';
+import 'function/angle_to_radians.dart';
 import 'model.dart';
-import 'function/angleToRadians.dart';
 
 enum AngleFormat { degree, radians, cycles }
 
@@ -14,22 +15,18 @@ abstract class CoreStyle {
   }
 
   @mustCallSuper
-  _addListeners() {
-    alignment
-      ..addListener(() => _styleModel.alignment = alignment.getAlignment);
-    alignmentContent
-      ..addListener(
-          () => _styleModel.alignmentContent = alignmentContent.getAlignment);
-    background
-      ..addListener(() => _styleModel
-        ..backgroundColor = background.exportBackgroundColor
-        ..backgroundBlur = background.exportBackgroundBlur
-        ..backgroundImage = background.exportBackgroundImage
-        ..backgroundBlendMode = background.exportBackgroundBlendMode);
-    overflow
-      ..addListener(() => _styleModel
-        ..overflow = overflow.getOverflow
-        ..overflowDirection = overflow.getDirection);
+  void _addListeners() {
+    alignment.addListener(() => _styleModel.alignment = alignment.getAlignment);
+    alignmentContent.addListener(
+        () => _styleModel.alignmentContent = alignmentContent.getAlignment);
+    background.addListener(() => _styleModel
+      ..backgroundColor = background.exportBackgroundColor
+      ..backgroundBlur = background.exportBackgroundBlur
+      ..backgroundImage = background.exportBackgroundImage
+      ..backgroundBlendMode = background.exportBackgroundBlendMode);
+    overflow.addListener(() => _styleModel
+      ..overflow = overflow.getOverflow
+      ..overflowDirection = overflow.getDirection);
   }
 
   final AngleFormat angleFormat;
@@ -211,8 +208,9 @@ abstract class CoreStyle {
     );
   }
 
-  void circle([enable = true]) =>
-      enable ? _styleModel.boxShape = BoxShape.circle : null;
+  void circle([bool enable = true]) {
+    if (enable) _styleModel.boxShape = BoxShape.circle;
+  }
 
   // TODO: add posibility to append box shadow instead of replacing. bool append = true
   /// If defined while the elevation method is defined, the last one defined will be the one applied.
@@ -249,7 +247,7 @@ abstract class CoreStyle {
     double calculatedOpacity = (0.5 - (sqrt(elevation) / 19)) * opacity;
     if (calculatedOpacity < 0.0) calculatedOpacity = 0.0;
 
-    final Color colorWithOpacity = color.withOpacity(calculatedOpacity);
+    final Color colorWithOpacity = color.withValues(alpha: calculatedOpacity);
 
     _styleModel.boxShadow = [
       BoxShadow(
@@ -318,21 +316,12 @@ abstract class CoreStyle {
     ..duration = Duration(milliseconds: duration)
     ..curve = curve;
 
-  // void add<T extends CoreStyle>(T style, {bool override = false}) =>
-  //   _styleModel?.inject(style?._styleModel, override);
-
   // export raw styledata
   StyleModel get exportStyle => _styleModel;
 }
 
 class ParentStyle extends CoreStyle {
-  ParentStyle({this.angleFormat = AngleFormat.cycles})
-      : super(angleFormat: angleFormat);
-
-  final AngleFormat angleFormat;
-
-  // TODO: implement
-  // static ThemeDataModel<ParentStyle> themeData = ThemeDataModel<ParentStyle>();
+  ParentStyle({super.angleFormat});
 
   /// Combines style from another style instance
   /// ```dart
@@ -354,20 +343,15 @@ class ParentStyle extends CoreStyle {
 }
 
 class TxtStyle extends CoreStyle {
-  TxtStyle({AngleFormat angleFormat = AngleFormat.cycles})
-      : super(angleFormat: angleFormat);
+  TxtStyle({super.angleFormat});
 
   @override
   void _addListeners() {
     super._addListeners();
-    textAlign
-      ..addListener(() {
-        _textModel.textAlign = textAlign.exportTextAlign;
-      });
+    textAlign.addListener(() {
+      _textModel.textAlign = textAlign.exportTextAlign;
+    });
   }
-
-  // TODO: implemet
-  // static ThemeDataModel<TxtStyle> themeData = ThemeDataModel<TxtStyle>();
 
   final TextModel _textModel = TextModel();
 
@@ -439,7 +423,7 @@ class TxtStyle extends CoreStyle {
     double calculatedOpacity = (0.5 - (sqrt(elevation) / 19)) * opacity;
     if (calculatedOpacity < 0.0) calculatedOpacity = 0.0;
 
-    final Color colorWithOpacity = color.withOpacity(calculatedOpacity);
+    final Color colorWithOpacity = color.withValues(alpha: calculatedOpacity);
 
     _textModel.textShadow = [
       Shadow(
@@ -464,19 +448,22 @@ class TxtStyle extends CoreStyle {
       void Function(TextSelection, SelectionChangedCause?)? onSelectionChanged,
       void Function()? onEditingComplete,
       FocusNode? focusNode}) {
-    if (enable == true)
-      _textModel
-        ..editable = true
-        ..keyboardType = keyboardType
-        ..placeholder = placeholder
-        ..obscureText = obscureText
-        ..autoFocus = autoFocus
-        ..maxLines = maxLines
-        ..onChange = onChange
-        ..onFocusChange = onFocusChange
-        ..onSelectionChanged = onSelectionChanged
-        ..onEditingComplete = onEditingComplete
-        ..focusNode = focusNode;
+    if (enable != true) return;
+
+    _textModel
+      ..editable = true
+      ..keyboardType = keyboardType
+      ..placeholder = placeholder
+      ..obscureText = obscureText
+      ..autoFocus = autoFocus
+      ..onChange = onChange
+      ..onFocusChange = onFocusChange
+      ..onSelectionChanged = onSelectionChanged
+      ..onEditingComplete = onEditingComplete
+      ..focusNode = focusNode;
+
+    // Only override a `maxLines` set elsewhere in the cascade when one is given.
+    if (maxLines != null) _textModel.maxLines = maxLines;
   }
 
   /// Combines style from another style instance
@@ -518,15 +505,18 @@ class Gestures {
       {this.behavior,
       this.excludeFromSemantics = false,
       this.dragStartBehavior = DragStartBehavior.start})
-      : this.gestureModel = GestureModel(
+      : gestureModel = GestureModel(
             behavior: behavior,
             excludeFromSemantics: excludeFromSemantics,
             dragStartBehavior: dragStartBehavior);
 
   /// How this gesture detector should behave during hit testing.
   ///
-  /// This defaults to [HitTestBehavior.deferToChild] if [child] is not null and
-  /// [HitTestBehavior.translucent] if child is null.
+  /// Defaults to [HitTestBehavior.opaque], so the whole styled box is
+  /// interactive — including its padding and any empty area — rather than only
+  /// the parts of the child that happen to hit test. Pass
+  /// [HitTestBehavior.translucent] to also let widgets behind receive the
+  /// pointer, or [HitTestBehavior.deferToChild] for the framework default.
   final HitTestBehavior? behavior;
 
   /// Whether to exclude these gestures from the semantics tree. For

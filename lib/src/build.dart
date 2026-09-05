@@ -1,13 +1,12 @@
 import 'dart:ui';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'dash.dart';
 import 'model.dart';
 
 class CoreBuild extends StatelessWidget {
-  CoreBuild({this.child, this.styleModel, this.gestureModel})
+  CoreBuild({super.key, this.child, this.styleModel, this.gestureModel})
       : decoration = styleModel?.decoration,
         constraints = styleModel?.constraints;
 
@@ -19,12 +18,22 @@ class CoreBuild extends StatelessWidget {
   final BoxConstraints? constraints;
 
   EdgeInsetsGeometry? get _paddingIncludingDecoration {
-    if (decoration == null) return styleModel?.padding;
-    final EdgeInsetsGeometry? decorationPadding = decoration!.padding;
-    if (styleModel?.padding == null) return decorationPadding;
-    final EdgeInsetsGeometry padding = styleModel!.padding!;
-    return padding.add(decorationPadding!);
+    final EdgeInsetsGeometry? stylePadding = styleModel?.padding;
+    final EdgeInsetsGeometry? decorationPadding = decoration?.padding;
+    if (decorationPadding == null) return stylePadding;
+    if (stylePadding == null) return decorationPadding;
+    return stylePadding.add(decorationPadding);
   }
+
+  /// The border radius as a concrete [BorderRadius].
+  ///
+  /// [BorderRadiusGeometry] may be a [BorderRadiusDirectional], which cannot be
+  /// used by `ClipRRect`/`InkWell` until it has been resolved against the
+  /// ambient text direction.
+  BorderRadius _borderRadius(BuildContext context) =>
+      decoration?.borderRadius
+          ?.resolve(Directionality.maybeOf(context) ?? TextDirection.ltr) ??
+      BorderRadius.zero;
 
   @override
   Widget build(BuildContext context) {
@@ -38,46 +47,48 @@ class CoreBuild extends StatelessWidget {
       );
     }
 
-    if (styleModel?.alignmentContent != null)
+    if (styleModel?.alignmentContent != null) {
       widgetTree =
           Align(alignment: styleModel!.alignmentContent!, child: widgetTree);
+    }
 
     final EdgeInsetsGeometry? effectivePadding = _paddingIncludingDecoration;
-    if (effectivePadding != null)
+    if (effectivePadding != null) {
       widgetTree = Padding(padding: effectivePadding, child: widgetTree);
+    }
 
-    // ignore: missing_enum_constant_in_switch
     switch (styleModel?.overflow) {
       case OverflowType.scroll:
         widgetTree = SingleChildScrollView(
-            child: widgetTree, scrollDirection: styleModel!.overflowDirection!);
+          scrollDirection: styleModel?.overflowDirection ?? Axis.vertical,
+          child: widgetTree,
+        );
         break;
       case OverflowType.hidden:
-        widgetTree = ClipRRect(
-            borderRadius: decoration?.borderRadius as BorderRadius? ??
-                BorderRadius.circular(0.0),
-            child: widgetTree);
+        widgetTree =
+            ClipRRect(borderRadius: _borderRadius(context), child: widgetTree);
         break;
       case OverflowType.visible:
         widgetTree = OverflowBox(
-            child: widgetTree,
             maxHeight: styleModel?.overflowDirection == Axis.vertical
                 ? double.infinity
                 : null,
             maxWidth: styleModel?.overflowDirection == Axis.horizontal
                 ? double.infinity
                 : null,
-            alignment: styleModel?.alignmentContent ?? Alignment.topCenter);
+            alignment: styleModel?.alignmentContent ?? Alignment.topCenter,
+            child: widgetTree);
         break;
       case null:
+        break;
     }
 
-    if (styleModel?.ripple != null && styleModel?.ripple?.enable == true) {
+    if (styleModel?.ripple?.enable == true) {
       widgetTree = Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: gestureModel?.onTap ?? () {},
-          borderRadius: decoration?.borderRadius as BorderRadius?,
+          borderRadius: _borderRadius(context),
           highlightColor: styleModel?.ripple?.highlightColor,
           splashColor: styleModel?.ripple?.splashColor,
           child: widgetTree,
@@ -86,34 +97,37 @@ class CoreBuild extends StatelessWidget {
     }
 
     // Dash border
-    if (styleModel?.dashBorder != null) {
-      final radius = decoration?.borderRadius?.resolve(TextDirection.ltr) ??
-          BorderRadius.zero;
-
+    final DashBorder? dashBorder = styleModel?.dashBorder;
+    if (dashBorder != null) {
       widgetTree = CustomDashedBorder(
+        radius: _borderRadius(context),
+        dashLength: dashBorder.dashLength,
+        gapLength: dashBorder.gapLength,
+        strokeWidth: dashBorder.strokeWidth,
+        color: dashBorder.color,
         child: widgetTree,
-        radius: radius,
-        dashLength: styleModel?.dashBorder?.dashLength,
-        gapLength: styleModel?.dashBorder?.gapLength,
-        strokeWidth: styleModel?.dashBorder?.strokeWidth,
-        color: styleModel?.dashBorder?.color,
       );
     }
 
-    if (decoration != null)
+    if (decoration != null) {
       widgetTree = DecoratedBox(decoration: decoration!, child: widgetTree);
+    }
 
-    if (gestureModel != null) widgetTree = gestures(widgetTree!, gestureModel!);
+    if (gestureModel != null) {
+      widgetTree = gestures(widgetTree, gestureModel!);
+    }
 
-    if (constraints != null)
+    if (constraints != null) {
       widgetTree = ConstrainedBox(constraints: constraints!, child: widgetTree);
+    }
 
-    if (styleModel?.margin != null)
+    if (styleModel?.margin != null) {
       widgetTree = Padding(padding: styleModel!.margin!, child: widgetTree);
+    }
 
     if (styleModel?.backgroundBlur != null) {
       widgetTree = ClipRRect(
-        borderRadius: decoration?.borderRadius as BorderRadius,
+        borderRadius: _borderRadius(context),
         child: BackdropFilter(
           filter: ImageFilter.blur(
             sigmaX: styleModel!.backgroundBlur!,
@@ -124,8 +138,9 @@ class CoreBuild extends StatelessWidget {
       );
     }
 
-    if (styleModel?.alignment != null)
+    if (styleModel?.alignment != null) {
       widgetTree = Align(alignment: styleModel!.alignment!, child: widgetTree);
+    }
 
     if (styleModel?.transform != null) {
       widgetTree = Transform(
@@ -135,81 +150,76 @@ class CoreBuild extends StatelessWidget {
       );
     }
 
-    if (styleModel?.opacity != null)
+    if (styleModel?.opacity != null) {
       widgetTree = Opacity(opacity: styleModel!.opacity!, child: widgetTree);
+    }
 
-    return widgetTree!;
+    return widgetTree ?? const SizedBox.shrink();
   }
 
-  Widget gestures(Widget widgetTree, GestureModel? gesture) {
+  Widget gestures(Widget? widgetTree, GestureModel gesture) {
     return GestureDetector(
       onTapDown: (TapDownDetails tapDownDetails) {
-        if (gesture?.onTapDown != null) gesture!.onTapDown!(tapDownDetails);
-        if (gesture?.isTap != null) gesture!.isTap!(true);
+        gesture.onTapDown?.call(tapDownDetails);
+        gesture.isTap?.call(true);
       },
       onTapUp: (TapUpDetails tapUpDetails) {
-        if (gesture?.onTapUp != null) gesture!.onTapUp!(tapUpDetails);
-        if (gesture?.isTap != null) gesture!.isTap!(false);
+        gesture.onTapUp?.call(tapUpDetails);
+        gesture.isTap?.call(false);
       },
       onTapCancel: () {
-        if (gesture?.onTapCancel != null) gesture!.onTapCancel!();
-        if (gesture?.isTap != null) gesture!.isTap!(false);
+        gesture.onTapCancel?.call();
+        gesture.isTap?.call(false);
       },
-      onTap: gesture?.onTap,
-      onDoubleTap: gesture?.onDoubleTap,
-      onLongPress: gesture?.onLongPress,
-      onLongPressStart: gesture?.onLongPressStart,
-      onLongPressEnd: gesture?.onLongPressEnd,
-      onLongPressMoveUpdate: gesture?.onLongPressMoveUpdate,
-      onLongPressUp: gesture?.onLongPressUp,
-      onVerticalDragStart: gesture?.onVerticalDragStart,
-      onVerticalDragEnd: gesture?.onVerticalDragEnd,
-      onVerticalDragDown: gesture?.onVerticalDragDown,
-      onVerticalDragCancel: gesture?.onVerticalDragCancel,
-      onVerticalDragUpdate: gesture?.onVerticalDragUpdate,
-      onHorizontalDragStart: gesture?.onHorizontalDragStart,
-      onHorizontalDragEnd: gesture?.onHorizontalDragEnd,
-      onHorizontalDragCancel: gesture?.onHorizontalDragCancel,
-      onHorizontalDragUpdate: gesture?.onHorizontalDragUpdate,
-      onHorizontalDragDown: gesture?.onHorizontalDragDown,
-      onForcePressStart: gesture?.onForcePressStart,
-      onForcePressEnd: gesture?.onForcePressEnd,
-      onForcePressPeak: gesture?.onForcePressPeak,
-      onForcePressUpdate: gesture?.onForcePressUpdate,
-      onPanStart: gesture?.onPanStart,
-      onPanEnd: gesture?.onPanEnd,
-      onPanCancel: gesture?.onPanCancel,
-      onPanDown: gesture?.onPanDown,
-      onPanUpdate: gesture?.onPanUpdate,
-      onScaleStart: gesture?.onScaleStart,
-      onScaleEnd: gesture?.onScaleEnd,
-      onScaleUpdate: gesture?.onScaleUpdate,
-      behavior: gesture?.behavior,
-      excludeFromSemantics: gesture?.excludeFromSemantics ?? false,
-      dragStartBehavior: gesture?.dragStartBehavior ?? DragStartBehavior.start,
+      onTap: gesture.onTap,
+      onSecondaryTapDown: gesture.onSecondaryTapDown,
+      onSecondaryTapUp: gesture.onSecondaryTapUp,
+      onSecondaryTapCancel: gesture.onSecondaryTapCancel,
+      onDoubleTap: gesture.onDoubleTap,
+      onLongPress: gesture.onLongPress,
+      onLongPressStart: gesture.onLongPressStart,
+      onLongPressEnd: gesture.onLongPressEnd,
+      onLongPressMoveUpdate: gesture.onLongPressMoveUpdate,
+      onLongPressUp: gesture.onLongPressUp,
+      onVerticalDragStart: gesture.onVerticalDragStart,
+      onVerticalDragEnd: gesture.onVerticalDragEnd,
+      onVerticalDragDown: gesture.onVerticalDragDown,
+      onVerticalDragCancel: gesture.onVerticalDragCancel,
+      onVerticalDragUpdate: gesture.onVerticalDragUpdate,
+      onHorizontalDragStart: gesture.onHorizontalDragStart,
+      onHorizontalDragEnd: gesture.onHorizontalDragEnd,
+      onHorizontalDragCancel: gesture.onHorizontalDragCancel,
+      onHorizontalDragUpdate: gesture.onHorizontalDragUpdate,
+      onHorizontalDragDown: gesture.onHorizontalDragDown,
+      onForcePressStart: gesture.onForcePressStart,
+      onForcePressEnd: gesture.onForcePressEnd,
+      onForcePressPeak: gesture.onForcePressPeak,
+      onForcePressUpdate: gesture.onForcePressUpdate,
+      onPanStart: gesture.onPanStart,
+      onPanEnd: gesture.onPanEnd,
+      onPanCancel: gesture.onPanCancel,
+      onPanDown: gesture.onPanDown,
+      onPanUpdate: gesture.onPanUpdate,
+      onScaleStart: gesture.onScaleStart,
+      onScaleEnd: gesture.onScaleEnd,
+      onScaleUpdate: gesture.onScaleUpdate,
+      behavior: gesture.behavior ?? HitTestBehavior.opaque,
+      excludeFromSemantics: gesture.excludeFromSemantics,
+      dragStartBehavior: gesture.dragStartBehavior,
       child: widgetTree,
     );
   }
 }
 
-class ParentBuild extends StatelessWidget {
-  ParentBuild({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => child;
-}
-
 class TxtBuild extends StatelessWidget {
-  TxtBuild({this.text, this.textModel});
+  const TxtBuild({super.key, required this.text, this.textModel});
 
-  final String? text;
+  final String text;
   final TextModel? textModel;
 
   @override
   Widget build(BuildContext context) => Text(
-        text!,
+        text,
         style: textModel?.textStyle,
         textAlign: textModel?.textAlign ?? TextAlign.start,
         maxLines: textModel?.maxLines,
@@ -219,114 +229,150 @@ class TxtBuild extends StatelessWidget {
 }
 
 class TxtBuildEditable extends StatefulWidget {
-  TxtBuildEditable({required this.text, this.textModel})
-      : this.textStyle = textModel?.textStyle,
-        this.placeholderController =
-            TextEditingController(text: textModel?.placeholder);
+  const TxtBuildEditable({super.key, required this.text, this.textModel});
 
   final String text;
   final TextModel? textModel;
-  final TextStyle? textStyle;
-  final TextEditingController placeholderController;
 
   @override
-  _TxtBuildEditableState createState() => _TxtBuildEditableState();
+  State<TxtBuildEditable> createState() => _TxtBuildEditableState();
 }
 
 class _TxtBuildEditableState extends State<TxtBuildEditable> {
-  String? _initialTextValue;
-  TextEditingController? _controller;
+  late final TextEditingController _controller;
+
   FocusNode? _focusNode;
-  TextStyle? _placeholderTextStyle;
-  bool _showPlaceholder = true;
-  bool? _hasFocus = false;
+
+  /// Only a [FocusNode] created here may be disposed here. A node handed in
+  /// through the style is owned by the caller.
+  bool _ownsFocusNode = false;
+
+  bool _hasFocus = false;
+  bool _isEmpty = true;
 
   @override
   void initState() {
     super.initState();
-    _initialTextValue = widget.text;
     _controller = TextEditingController(text: widget.text);
-    _updatePlaceholderTextStyle();
-    _initializeFocusNode();
+    _isEmpty = widget.text.isEmpty;
+    _controller.addListener(_handleTextChanged);
+    _attachFocusNode(widget.textModel?.focusNode);
   }
 
   @override
-  void didUpdateWidget(TxtBuildEditable oldWidget) {
+  void didUpdateWidget(covariant TxtBuildEditable oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.textStyle != oldWidget.textStyle) {
-      _updatePlaceholderTextStyle();
+    // Adopt a new incoming value without discarding the controller, so the
+    // selection, composing region and listeners all survive the rebuild.
+    if (widget.text != oldWidget.text && widget.text != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: widget.text,
+        selection: TextSelection.collapsed(offset: widget.text.length),
+      );
     }
 
-    if (widget.text != _initialTextValue) {
-      _initialTextValue = widget.text;
-      _controller = TextEditingController(text: widget.text);
+    final FocusNode? newFocusNode = widget.textModel?.focusNode;
+    if (newFocusNode != oldWidget.textModel?.focusNode) {
+      _releaseFocusNode();
+      _attachFocusNode(newFocusNode);
     }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_handleTextChanged);
+    _controller.dispose();
+    _releaseFocusNode();
     super.dispose();
-    _focusNode?.dispose();
   }
 
-  void _updatePlaceholderTextStyle() {
-    _placeholderTextStyle = widget.textStyle?.copyWith(
-      color: widget.textStyle?.color?.withOpacity(0.7) ?? Colors.grey,
-      fontWeight: FontWeight.normal,
-    );
+  void _attachFocusNode(FocusNode? focusNode) {
+    _ownsFocusNode = focusNode == null;
+    _focusNode = focusNode ?? FocusNode();
+    _focusNode!.addListener(_handleFocusChanged);
+    _hasFocus = _focusNode!.hasFocus;
   }
 
-  void _initializeFocusNode() {
-    if (_focusNode == null)
-      _focusNode = widget.textModel?.focusNode ?? FocusNode();
-
-    _focusNode?.addListener(() {
-      // only when focus changes
-      bool? hasFocus = _focusNode?.hasFocus;
-      if (hasFocus != _hasFocus) {
-        _hasFocus = hasFocus;
-        _shouldShowPlaceholder();
-        if (widget.textModel?.onFocusChange != null)
-          widget.textModel!.onFocusChange!(_hasFocus);
-      }
-    });
+  void _releaseFocusNode() {
+    _focusNode?.removeListener(_handleFocusChanged);
+    if (_ownsFocusNode) _focusNode?.dispose();
+    _focusNode = null;
   }
 
-  void _shouldShowPlaceholder() {
-    if (_controller?.text.length == 0 &&
-        _hasFocus == false &&
-        _showPlaceholder == false)
-      setState(() => _showPlaceholder = true);
-    else if (_showPlaceholder == true) setState(() => _showPlaceholder = false);
+  void _handleFocusChanged() {
+    final bool hasFocus = _focusNode?.hasFocus ?? false;
+    if (hasFocus == _hasFocus) return;
+    _hasFocus = hasFocus;
+    widget.textModel?.onFocusChange?.call(hasFocus);
+    if (mounted) setState(() {});
+  }
+
+  void _handleTextChanged() {
+    final bool isEmpty = _controller.text.isEmpty;
+    if (isEmpty == _isEmpty) return;
+    _isEmpty = isEmpty;
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return EditableText(
-      obscureText:
-          _showPlaceholder ? false : widget.textModel?.obscureText ?? false,
-      autofocus: widget.textModel?.autoFocus ?? false,
-      cursorOpacityAnimates: true,
-      style: (_showPlaceholder ? _placeholderTextStyle : widget.textStyle) ??
-          TextStyle(),
-      textAlign: widget.textModel?.textAlign ?? TextAlign.start,
-      maxLines: widget.textModel?.maxLines ?? 1,
-      textDirection: widget.textModel?.textDirection,
-      controller:
-          _showPlaceholder ? widget.placeholderController : _controller!,
+    final TextModel? textModel = widget.textModel;
+    final TextStyle textStyle = textModel?.textStyle ?? const TextStyle();
+    final int maxLines = textModel?.maxLines ?? 1;
+
+    final Widget editable = EditableText(
+      controller: _controller,
       focusNode: _focusNode!,
+      obscureText: textModel?.obscureText ?? false,
+      autofocus: textModel?.autoFocus ?? false,
+      cursorOpacityAnimates: true,
+      style: textStyle,
+      textAlign: textModel?.textAlign ?? TextAlign.start,
+      maxLines: maxLines,
+      textDirection: textModel?.textDirection,
       backgroundCursorColor: Colors.grey,
-      cursorColor: Colors.black,
-      keyboardType: widget.textModel?.keyboardType ?? TextInputType.text,
-      onChanged: widget.textModel?.onChange,
-      onSelectionChanged: widget.textModel?.onSelectionChanged,
+      cursorColor: textStyle.color ?? Colors.black,
+      keyboardType: textModel?.keyboardType ?? TextInputType.text,
+      onChanged: textModel?.onChange,
+      onSelectionChanged: textModel?.onSelectionChanged,
       onEditingComplete: () {
         _focusNode?.unfocus();
-        _controller?.clearComposing();
-        if (widget.textModel?.onEditingComplete != null)
-          widget.textModel!.onEditingComplete!();
+        _controller.clearComposing();
+        textModel?.onEditingComplete?.call();
       },
+    );
+
+    final String? placeholder = textModel?.placeholder;
+    if (placeholder == null) return editable;
+
+    // The placeholder is drawn over the field rather than swapped into the
+    // controller, so the real value is never displaced by it.
+    //
+    // `editable` stays at index 0 of the same Stack whether or not the
+    // placeholder is showing: changing the shape of the tree around it would
+    // rebuild `EditableTextState` and drop the platform input connection.
+    return Stack(
+      children: <Widget>[
+        editable,
+        if (_isEmpty && !_hasFocus)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Text(
+                placeholder,
+                style: textStyle.copyWith(
+                  color:
+                      (textStyle.color ?? Colors.black).withValues(alpha: 0.7),
+                  fontWeight: FontWeight.normal,
+                ),
+                textAlign: textModel?.textAlign ?? TextAlign.start,
+                textDirection: textModel?.textDirection,
+                maxLines: maxLines,
+                overflow: TextOverflow.clip,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

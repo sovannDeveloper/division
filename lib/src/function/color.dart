@@ -24,11 +24,12 @@ Color rgba(int r, int g, int b, [double opacity = 1.0]) {
   return Color.fromRGBO(r, g, b, opacity);
 }
 
-/// 6 digit hex color. The use if `#` is not required but optional.
+/// Hex color. The leading `#` is optional.
+///
+/// Accepts `RGB`, `ARGB`, `RRGGBB` and `AARRGGBB`.
 /// ```dart
 /// hex('f5f5f5') // or
 /// hex('#f5f5f5')
 /// ```
-Color hex(String xxxxxx) {
-  return HexColor(xxxxxx);
-}
+/// Throws a [FormatException] if [xxxxxx] is not a valid hex color.
+Color hex(String xxxxxx) => Color(hexToArgb(xxxxxx));

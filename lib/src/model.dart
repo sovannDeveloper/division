@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import 'dash.dart';
 import 'function/hex_color.dart';
-// import 'style.dart';
 
 class RippleModel {
   final bool? enable;
@@ -44,7 +43,7 @@ class BackgroundModel with ChangeNotifier {
   /// background.hex('f5f5f5')
   /// ```
   void hex(String xxxxxx) {
-    _color = HexColor(xxxxxx);
+    _color = Color(hexToArgb(xxxxxx));
     notifyListeners();
   }
 
@@ -74,24 +73,27 @@ class BackgroundModel with ChangeNotifier {
   void image(
       {String? url,
       String? path,
-      ImageProvider<dynamic>? imageProvider,
+      ImageProvider<Object>? imageProvider,
       ColorFilter? colorFilter,
       BoxFit? fit,
       AlignmentGeometry alignment = Alignment.center,
       ImageRepeat repeat = ImageRepeat.noRepeat}) {
-    if ((url ?? path ?? imageProvider) == null)
-      throw ('Either the [imageProvider], [url] or the [path] has to be provided');
+    if (imageProvider == null && path == null && url == null) {
+      throw ArgumentError(
+          'Either the [imageProvider], [url] or the [path] has to be provided');
+    }
 
-    ImageProvider<dynamic> image;
-    if (imageProvider != null)
+    final ImageProvider<Object> image;
+    if (imageProvider != null) {
       image = imageProvider;
-    else if (path != null)
+    } else if (path != null) {
       image = AssetImage(path);
-    else
+    } else {
       image = NetworkImage(url!);
+    }
 
     _image = DecorationImage(
-      image: image as ImageProvider<Object>,
+      image: image,
       colorFilter: colorFilter,
       fit: fit,
       alignment: alignment,
@@ -100,13 +102,16 @@ class BackgroundModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void blendMode(BlendMode blendMode) => _blendMode = blendMode;
+  void blendMode(BlendMode blendMode) {
+    _blendMode = blendMode;
+    notifyListeners();
+  }
 }
 
 class AlignmentModel with ChangeNotifier {
-  late AlignmentGeometry _alignment;
+  AlignmentGeometry? _alignment;
 
-  AlignmentGeometry get getAlignment => _alignment;
+  AlignmentGeometry? get getAlignment => _alignment;
 
   void topLeft([bool enable = true]) =>
       _updateAlignment(Alignment.topLeft, enable);
@@ -250,18 +255,17 @@ class StyleModel {
     // gesture = _replace(gesture, intruder?.gesture, override);
   }
 
-  dynamic _replace(dynamic current, dynamic intruder, bool override) {
-    if (override == true)
-      return intruder ?? current;
-    else
-      return current ?? intruder;
-  }
+  T? _replace<T>(T? current, T? intruder, bool override) =>
+      override ? (intruder ?? current) : (current ?? intruder);
 
   BoxConstraints? get constraints {
     if (_constraints != null) return _constraints;
 
     BoxConstraints? boxConstraints;
-    if ((minHeight ?? maxHeight ?? minWidth ?? maxWidth) != null) {
+    if (minHeight != null ||
+        maxHeight != null ||
+        minWidth != null ||
+        maxWidth != null) {
       boxConstraints = BoxConstraints(
         minWidth: minWidth ?? 0.0,
         maxWidth: maxWidth ?? double.infinity,
@@ -280,16 +284,15 @@ class StyleModel {
   BoxDecoration? get decoration {
     if (_decoration != null) return _decoration;
 
-    if ((backgroundColor ??
-            backgroundImage ??
-            gradient ??
-            border ??
-            borderRadius ??
-            boxShadow ??
-            boxShape ??
-            backgroundBlendMode) !=
-        null) {
-      BoxDecoration boxDecoration = BoxDecoration(
+    if (backgroundColor != null ||
+        backgroundImage != null ||
+        gradient != null ||
+        border != null ||
+        borderRadius != null ||
+        boxShadow != null ||
+        boxShape != null ||
+        backgroundBlendMode != null) {
+      final BoxDecoration boxDecoration = BoxDecoration(
           color: backgroundColor,
           image: backgroundImage,
           gradient: gradient,
@@ -306,16 +309,24 @@ class StyleModel {
   Matrix4? get transform {
     if (_transform != null) return _transform;
 
-    if ((scale ?? rotate ?? offset) != null) {
+    if (scale != null || rotate != null || offset != null) {
+      final double scaleValue = scale ?? 1.0;
       return Matrix4.rotationZ(rotate ?? 0.0)
-        ..scale(scale ?? 1.0)
-        ..translate(
-          offset?.dx ?? 0.0,
-          offset?.dy ?? 0.0,
-        );
+        ..scaleByDouble(scaleValue, scaleValue, scaleValue, 1.0)
+        ..translateByDouble(offset?.dx ?? 0.0, offset?.dy ?? 0.0, 0.0, 1.0);
     }
     return null;
   }
+
+  /// A detached copy of this model.
+  ///
+  /// Used by the animated widgets so that evaluating a tween never writes back
+  /// into the [StyleModel] owned by the caller's style object.
+  StyleModel copy() => StyleModel()
+    ..inject(this, true)
+    .._decoration = _decoration
+    .._constraints = _constraints
+    .._transform = _transform;
 
   set setBoxDecoration(BoxDecoration? boxDecoration) =>
       _decoration = boxDecoration;
@@ -372,54 +383,6 @@ class GestureModel {
   final HitTestBehavior? behavior;
   final bool excludeFromSemantics;
   final DragStartBehavior dragStartBehavior;
-
-// void inject(GestureModel intruder, bool override) {
-//   onTapDown = _replace(onTapDown, intruder?.onTapDown, override);
-// onTapUp;
-// onTap;
-// onTapCancel;
-// onSecondaryTapDown;
-// onSecondaryTapUp;
-// onSecondaryTapCancel;
-// onDoubleTap;
-// onLongPress;
-// onLongPressStart;
-// onLongPressMoveUpdate;
-// onLongPressUp;
-// onLongPressEnd;
-// onVerticalDragDown;
-// final GestureDragStartCallback onVerticalDragStart;
-// final GestureDragUpdateCallback onVerticalDragUpdate;
-// final GestureDragEndCallback onVerticalDragEnd;
-// final GestureDragCancelCallback onVerticalDragCancel;
-// final GestureDragDownCallback onHorizontalDragDown;
-// final GestureDragStartCallback onHorizontalDragStart;
-// final GestureDragUpdateCallback onHorizontalDragUpdate;
-// final GestureDragEndCallback onHorizontalDragEnd;
-// final GestureDragCancelCallback onHorizontalDragCancel;
-// final GestureDragDownCallback onPanDown;
-// final GestureDragStartCallback onPanStart;
-// final GestureDragUpdateCallback onPanUpdate;
-// final GestureDragEndCallback onPanEnd;
-// final GestureDragCancelCallback onPanCancel;
-// final GestureScaleStartCallback onScaleStart;
-// final GestureScaleUpdateCallback onScaleUpdate;
-// final GestureScaleEndCallback onScaleEnd;
-// final GestureForcePressStartCallback onForcePressStart;
-// final GestureForcePressPeakCallback onForcePressPeak;
-// final GestureForcePressUpdateCallback onForcePressUpdate;
-// final GestureForcePressEndCallback onForcePressEnd;
-// final HitTestBehavior behavior;
-// final bool excludeFromSemantics;
-// final DragStartBehavior dragStartBehavior;
-// }
-
-// dynamic _replace(dynamic current, dynamic intruder, bool override) {
-//   if (override == true)
-//     return intruder ?? current;
-//   else
-//     return current ?? intruder;
-// }
 }
 
 class TextModel {
@@ -442,7 +405,7 @@ class TextModel {
   bool? editable;
   TextInputType? keyboardType;
   String? placeholder;
-  late bool obscureText;
+  bool? obscureText;
   bool? autoFocus;
 
   void Function(String)? onChange;
@@ -470,6 +433,8 @@ class TextModel {
 
     editable = _replace(editable, textModel?.editable, override);
     keyboardType = _replace(keyboardType, textModel?.keyboardType, override);
+    placeholder = _replace(placeholder, textModel?.placeholder, override);
+    obscureText = _replace(obscureText, textModel?.obscureText, override);
     onChange = _replace(onChange, textModel?.onChange, override);
     onFocusChange = _replace(onFocusChange, textModel?.onFocusChange, override);
     onSelectionChanged =
@@ -481,12 +446,11 @@ class TextModel {
     textOverflow = _replace(textOverflow, textModel?.textOverflow, override);
   }
 
-  dynamic _replace(dynamic current, dynamic intruder, bool override) {
-    if (override == true)
-      return intruder ?? current;
-    else
-      return current ?? intruder;
-  }
+  T? _replace<T>(T? current, T? intruder, bool override) =>
+      override ? (intruder ?? current) : (current ?? intruder);
+
+  /// A detached copy of this model. See [StyleModel.copy].
+  TextModel copy() => TextModel()..inject(this, true);
 
   TextStyle get textStyle {
     return TextStyle(
@@ -523,26 +487,10 @@ class TextAlignModel with ChangeNotifier {
 
   void end([bool enable = true]) => _updateAlignment(TextAlign.end, enable);
 
-  _updateAlignment(TextAlign textAlign, bool enable) {
+  void _updateAlignment(TextAlign textAlign, bool enable) {
     if (enable == true) {
       _textAlign = textAlign;
       notifyListeners();
     }
   }
 }
-
-// class ThemeDataModel<T extends CoreStyle> {
-//   static Map<dynamic, dynamic> _styleData = {};
-//   T create(dynamic key) {
-//     assert(!_styleData.containsKey(key), 'ThemeData key "$key" already exists');
-//     if (T == ParentStyle)
-//       _styleData[key] = ParentStyle();
-//     else if (T == TxtStyle) _styleData[key] = TxtStyle();
-//     return _styleData[key];
-//   }
-
-//   T use(dynamic key) {
-//     assert(_styleData.containsKey(key), 'ThemeData key "$key" does not exist');
-//     return _styleData[key];
-//   }
-// }

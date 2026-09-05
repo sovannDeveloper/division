@@ -23,7 +23,7 @@ Simple to use yet powerful style widgets with syntax inspired by CSS.
 
 ```yaml
 dependencies:
-  division: ^0.8.8
+  division: ^0.9.0
 ```
 
 ```dart
@@ -195,7 +195,8 @@ Sets the background color from RGB channels (0–255) and an opacity (0.0–1.0)
 ```
 
 #### `background.hex(String xxxxxx)`
-Sets the background color from a 6-digit hex string. The `#` is optional.
+Sets the background color from a hex string. The `#` is optional. Accepts
+`RGB`, `ARGB`, `RRGGBB` and `AARRGGBB`.
 ```dart
 ..background.hex('f5f5f5')
 ```
@@ -590,6 +591,11 @@ Gestures({
 })
 ```
 
+`behavior` defaults to `HitTestBehavior.opaque`, so the whole styled box —
+including its padding and any empty area — is interactive. Pass
+`HitTestBehavior.translucent` to also let widgets behind receive the pointer, or
+`HitTestBehavior.deferToChild` for the framework default.
+
 ### Tap
 
 #### `onTap(void Function() fn)`
@@ -708,10 +714,13 @@ Creates a color with opacity (0.0–1.0).
 ```
 
 #### `hex(String xxxxxx) → Color`
-Creates a color from a 6-digit hex string. The `#` prefix is optional.
+Creates a color from a hex string. The `#` prefix is optional. Accepts `RGB`,
+`ARGB`, `RRGGBB` and `AARRGGBB`. Throws a `FormatException` on malformed input.
 ```dart
 ..background.color(hex('f5f5f5'))
 ..background.color(hex('#ff5733'))
+..background.color(hex('#f53'))      // shorthand
+..background.color(hex('#80ff5733')) // with alpha
 ```
 
 ---
