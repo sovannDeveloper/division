@@ -2,7 +2,8 @@
 
 Internal reference for working **on** and **with** the `division` package
 (v0.9.0). For the full, method-by-method user documentation see
-[README.md](README.md); for release history see [CHANGELOG.md](CHANGELOG.md).
+[README.md](README.md); for task-oriented "how do I …?" usage of every API see
+[USAGE.md](USAGE.md); for release history see [CHANGELOG.md](CHANGELOG.md).
 
 ## Contents
 
